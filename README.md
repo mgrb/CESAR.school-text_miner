@@ -15,7 +15,7 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 2. Baixar este repositorio
 ```bash
-git clone
+git clone https://github.com/mgrb/CESAR.school-text_miner.git
 ```
 
 3. acessar a pasta do repositorio
