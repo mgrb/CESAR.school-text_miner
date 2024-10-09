@@ -8,15 +8,12 @@ Usando o SELENIUN acesse a pagina: https://pt.wikipedia.org/
 4. Com os dados da página colete as informações necessárias para completar corretamente o texto do print (a célula a baixo deve ficar por ultimo no teu notebook).
 """
 
-import pprint
-import time
-
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.remote.webelement import WebElement
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 def navegate_to_cesar_page(driver: WebDriver):
@@ -54,7 +51,7 @@ def transform_table_data(data_table: WebElement) -> dict:
     return dict_data
 
 
-def extract_data_table(driver: WebDriver):
+def extract_data_table(driver: WebDriver) -> dict:
     # Localiza a tabela com dados basicos do CESAR pela classe CSS (utilizando 'CSS_SELECTOR' com todas as classes)
     data_table_basic = driver.find_element(By.CSS_SELECTOR, "table.infobox.infobox_v2")
     dados = transform_table_data(data_table_basic)
