@@ -14,6 +14,8 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from webdriver_manager.chrome import ChromeDriverManager
+import pandas as pd
+from pprint import pprint
 
 
 def navegate_to_cesar_page(driver: WebDriver):
@@ -64,39 +66,69 @@ def extract_fundadores(fundadores_str: str) -> list:
     return fundadores.split(", ")
 
 
-# Inicializando o driver
-service = Service(ChromeDriverManager().install())
-driver = webdriver.Chrome(service=service)
+def extract_academic_data(driver: WebDriver) -> dict:
+    url_page = driver.current_url
+    df = pd.read_html(url_page)
 
-navegate_to_cesar_page(driver)
-table = extract_data_table(driver)
+    academic_data = {
+        "Graduação": [],
+        "Mestrado Profissional": [],
+        "Doutorado Profissional": [],
+    }
+    grau = "Graduação"
+    for line in df[1]["Curso/Programa"].values:
+        grau = "Mestrado Profissional" if line[0] == "Mestrado Profissional" else grau
+        grau = "Doutorado Profissional" if line[0] == "Doutorado Profissional" else grau
+        if line[0] in academic_data.keys():
+            continue
+        academic_data[grau].append(line[0])
 
-# Coletando os dados do CESAR a partir da página do wikipedia do driver
+    return academic_data
 
-fundadores = extract_fundadores(table.get("fundadores"))
-organizacao = table.get("organização").split("\n")
 
-tipo = table.get("tipo")
-data_fundacao = table.get("fundação")
-fundador_01 = fundadores[0]
-fundador_02 = fundadores[1]
-fundador_03 = fundadores[2]
-local_fundacao = table.get("sede")
-ceo = organizacao[0]
-coo = organizacao[1]
-numero_funcionarios = table.get("empregados")
-graduacao_01 = ""
-graduacao_02 = ""
-metrado_01 = ""
-mestrado_01 = ""
-doutorado_01 = ""
-site = table.get("sítio_oficial")
+def extract_cursos(academic_data: dict) -> list:
+    cursos = []
+    for key, value in academic_data.items():
+        cursos.extend(value)
+    return cursos
 
-print(f"""
-      O CESAR é um {tipo} fundado em {data_fundacao} por {fundador_01}, {fundador_02}, {fundador_03}
-      em {local_fundacao}. Segundo os dados coletados, {ceo} e {coo} são os chefes da organização
-      que tem {numero_funcionarios}. O CESAR possui cursos de {graduacao_01}, {graduacao_02}, {metrado_01},
-      {mestrado_01}, {doutorado_01}. Para mais detalhes dessa instituição incrível, acesse {site}
-""")
 
-input("Pressione ENTER para fechar o navegador...")
+def print_abstract(org_data: dict, academic_data: dict):
+    # Coletando os dados do CESAR a partir da página do wikipedia do driver
+    fundadores = extract_fundadores(org_data.get("fundadores"))
+    organizacao = org_data.get("organização").split("\n")
+
+    tipo = org_data.get("tipo")
+    data_fundacao = org_data.get("fundação")
+    fundador_01 = fundadores[0]
+    fundador_02 = fundadores[1]
+    fundador_03 = fundadores[2]
+    local_fundacao = org_data.get("sede")
+    ceo = organizacao[0]
+    coo = organizacao[1]
+    numero_funcionarios = org_data.get("empregados")
+    site = org_data.get("sítio_oficial")
+
+    print(f"""
+        O CESAR é um {tipo} fundado em {data_fundacao} por {fundador_01}, {fundador_02}, {fundador_03}
+        em {local_fundacao}. Segundo os dados coletados, {ceo} e {coo} são os chefes da organização
+        que tem {numero_funcionarios}. O CESAR possui cursos de {", ".join(extract_cursos(academic_data))}. 
+        Para mais detalhes dessa instituição incrível, acesse {site}
+    """)
+
+
+if __name__ == "__main__":
+    # Inicializando o driver
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service)
+
+    navegate_to_cesar_page(driver)
+    org_data = extract_data_table(driver)
+
+    academic_data = extract_academic_data(driver)
+
+    driver.close()
+
+    print_abstract(org_data, academic_data)
+
+    input("Pressione ENTER para fechar o navegador...")
